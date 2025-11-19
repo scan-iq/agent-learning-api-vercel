@@ -24,7 +24,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: "Method not allowed" });
   }
 
-  return withIrisAuthVercel(req, res, async (project, req, res) => {
+  return withIrisAuthVercel(req, res, async (project, _req, res) => {
     try {
       const supabase = getSupabaseClient();
 

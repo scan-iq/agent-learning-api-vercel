@@ -1,7 +1,7 @@
 /**
  * Simple test endpoint to verify Vercel deployment
  */
-export default async function handler(req: Request) {
+export default async function handler(_req: Request) {
   return new Response(
     JSON.stringify({
       success: true,
