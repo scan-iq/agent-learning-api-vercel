@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { withIrisAuthVercel } from "../../lib/auth.js";
-import { initCoreSupabase } from "../../lib/supabase.js";
-import { logTelemetry } from "@foxruv/agent-learning-core";
+import { logTelemetry } from "../../lib/iris-telemetry.js";
 
 /**
  * POST /api/iris/telemetry
@@ -36,13 +35,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Call logTelemetry from core
+      // Call logTelemetry with project context
       await logTelemetry({
         expertId,
+        projectId: project.projectId,
         confidence,
         latencyMs,
         outcome,
-        ...rest,
+        metadata: rest,
       });
 
       return res.status(201).json({
