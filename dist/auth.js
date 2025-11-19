@@ -1,5 +1,4 @@
 /**
-import { findProjectByApiKey, touchApiKeyUsage, isValidApiKeyFormat } from "./apiKeys.js";
  * API Key Authentication for iris-prime-api
  *
  * Validates API keys against Supabase project_config table
@@ -7,6 +6,7 @@ import { findProjectByApiKey, touchApiKeyUsage, isValidApiKeyFormat } from "./ap
  */
 import { createClient } from '@supabase/supabase-js';
 import { UnauthorizedError, logAuthFailure } from './errors.js';
+import { findProjectByApiKey, touchApiKeyUsage, isValidApiKeyFormat } from "./apiKeys.js";
 /**
  * Supabase client singleton
  */

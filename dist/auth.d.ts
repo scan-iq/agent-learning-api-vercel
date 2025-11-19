@@ -1,5 +1,4 @@
 /**
-import { findProjectByApiKey, touchApiKeyUsage, isValidApiKeyFormat } from "./apiKeys.js";
  * API Key Authentication for iris-prime-api
  *
  * Validates API keys against Supabase project_config table
