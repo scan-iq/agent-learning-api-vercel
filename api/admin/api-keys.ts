@@ -13,7 +13,7 @@ import {
   listApiKeys,
   revokeApiKey,
   rotateApiKey,
-} from "../../dist/apiKeys.js";
+} from "../../lib/apiKeys.js";
 
 /**
  * Admin authentication (simple for now - can be enhanced with proper admin auth)
