@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { withIrisAuthVercel } from '../../lib/auth.js';
-import { initCoreSupabase, getSupabaseClient } from '../../lib/supabase.js';
+import { getSupabaseClient } from '../../lib/supabase.js';
 import { transformAnomalies } from '../../lib/transform.js';
 
 /**
@@ -22,7 +22,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return withIrisAuthVercel(req, res, async (project, req, res) => {
     try {
-      await initCoreSupabase();
       const supabase = getSupabaseClient();
 
       const projectId = (req.query.projectId as string) || project.projectId;

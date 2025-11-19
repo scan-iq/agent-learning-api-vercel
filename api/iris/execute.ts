@@ -22,7 +22,7 @@ import type { CodeExecutionRequest, CodeExecutionResponse } from '../../lib/type
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
-): Promise<void> {
+) {
   try {
     // Only allow POST requests
     if (req.method !== 'POST') {
@@ -35,11 +35,9 @@ export default async function handler(
       });
     }
 
-    // Apply rate limiting
-    await rateLimit(req, res, {
-      maxRequests: 100,
-      windowMs: 60000, // 1 minute
-    });
+    // Apply rate limiting by IP
+    const ip = (req.headers['x-forwarded-for'] as string)?.split(',')[0] || req.socket?.remoteAddress || 'unknown';
+    rateLimit(`ip:${ip}`, 100, 60000);
 
     // Authenticate and execute with project context
     return withIrisAuthVercel(req, res, async (project, req, res) => {

@@ -1,5 +1,4 @@
 import { VercelRequest, VercelResponse } from '@vercel/node';
-import { initCoreSupabase } from '../../lib/supabase.js';
 
 /**
  * POST /api/whatsapp/webhook
@@ -30,8 +29,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Handle webhook events (POST request)
   if (req.method === 'POST') {
     try {
-      await initCoreSupabase();
-
       const body = req.body;
 
       // Validate webhook signature (optional but recommended)
