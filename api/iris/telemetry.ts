@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { withIrisAuthVercel } from "../../lib/auth.js";
 import { logTelemetry } from "../../lib/iris-telemetry.js";
+import { logEnhancedTelemetry, type EnhancedTelemetryEvent } from "../../lib/enhanced-telemetry.js";
 
 /**
  * POST /api/iris/telemetry
@@ -17,14 +18,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return withIrisAuthVercel(req, res, async (project, req, res) => {
     try {
-      const body = req.body as {
-        expertId?: string;
-        confidence?: number;
-        latencyMs?: number;
-        outcome?: string;
-        [key: string]: unknown;
-      };
-      const { expertId, confidence, latencyMs, outcome, ...rest } = body;
+      const body = req.body as Partial<EnhancedTelemetryEvent>;
+      const { expertId, ...telemetryData } = body;
 
       // Validate required fields
       if (!expertId) {
@@ -33,15 +28,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Call logTelemetry with project context
-      await logTelemetry({
-        expertId,
-        projectId: project.projectId,
-        confidence,
-        latencyMs,
-        outcome,
-        metadata: rest,
-      });
+      // Use enhanced telemetry if additional fields are provided
+      const hasEnhancedData = !!(
+        body.agentType || body.modelName || body.reasoningSteps ||
+        body.toolCalls || body.causalChain || body.reflexionData
+      );
+
+      if (hasEnhancedData) {
+        await logEnhancedTelemetry({
+          expertId,
+          projectId: project.projectId,
+          ...telemetryData,
+        });
+      } else {
+        // Simple telemetry for backwards compatibility
+        await logTelemetry({
+          expertId,
+          projectId: project.projectId,
+          confidence: body.confidence,
+          latencyMs: body.latencyMs,
+          outcome: body.outcome,
+          eventType: body.eventType,
+          metadata: body.metadata,
+        });
+      }
 
       return res.status(201).json({
         success: true,
