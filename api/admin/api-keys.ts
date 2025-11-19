@@ -8,6 +8,7 @@
  * - POST   /api/admin/api-keys/:keyId/rotate - Rotate an API key
  */
 
+import type { VercelRequest, VercelResponse } from "@vercel/node";
 import {
   createApiKey,
   listApiKeys,
@@ -19,8 +20,8 @@ import {
  * Admin authentication (simple for now - can be enhanced with proper admin auth)
  * TODO: Replace with proper admin authentication
  */
-function isAdminRequest(req: Request): boolean {
-  const adminKey = req.headers.get("X-Admin-Key");
+function isAdminRequest(req: VercelRequest): boolean {
+  const adminKey = req.headers["x-admin-key"] as string;
   const expectedAdminKey = process.env.ADMIN_API_KEY;
 
   if (!expectedAdminKey) {
@@ -46,244 +47,144 @@ function getCorsHeaders() {
 /**
  * Main handler - routes requests based on method and path
  */
-export default async function handler(req: Request) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Set CORS headers for all responses
+  const corsHeaders = getCorsHeaders();
+  Object.entries(corsHeaders).forEach(([key, value]) => {
+    res.setHeader(key, value);
+  });
+
   // Handle CORS preflight
   if (req.method === "OPTIONS") {
-    return new Response(null, {
-      status: 204,
-      headers: getCorsHeaders(),
-    });
+    return res.status(204).end();
   }
 
   // Check admin authentication
   if (!isAdminRequest(req)) {
-    return new Response(
-      JSON.stringify({
-        error: "Unauthorized",
-        hint: "Include X-Admin-Key header with valid admin key",
-      }),
-      {
-        status: 401,
-        headers: {
-          "Content-Type": "application/json",
-          ...getCorsHeaders(),
-        },
-      }
-    );
+    return res.status(401).json({
+      error: "Unauthorized",
+      hint: "Include X-Admin-Key header with valid admin key",
+    });
   }
 
-  const url = new URL(req.url);
   const method = req.method;
 
   try {
     // GET /api/admin/api-keys?projectId=xxx - List keys for a project
     if (method === "GET") {
-      const projectId = url.searchParams.get("projectId");
+      const projectId = req.query.projectId as string;
 
       if (!projectId) {
-        return new Response(
-          JSON.stringify({
-            error: "projectId query parameter is required",
-          }),
-          {
-            status: 400,
-            headers: {
-              "Content-Type": "application/json",
-              ...getCorsHeaders(),
-            },
-          }
-        );
+        return res.status(400).json({
+          error: "projectId query parameter is required",
+        });
       }
 
       const keys = await listApiKeys(projectId);
 
-      return new Response(
-        JSON.stringify({
-          projectId,
-          keys: keys.map((key) => ({
-            id: key.id,
-            projectId: key.project_id,
-            projectName: key.project_name,
-            prefix: key.api_key_prefix,
-            label: key.label,
-            lastUsedAt: key.last_used_at,
-            usageCount: key.usage_count,
-            isActive: key.is_active,
-            createdAt: key.created_at,
-            revokedAt: key.revoked_at,
-          })),
-        }),
-        {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            ...getCorsHeaders(),
-          },
-        }
-      );
+      return res.status(200).json({
+        projectId,
+        keys: keys.map((key) => ({
+          id: key.id,
+          projectId: key.project_id,
+          projectName: key.project_name,
+          prefix: key.api_key_prefix,
+          label: key.label,
+          lastUsedAt: key.last_used_at,
+          usageCount: key.usage_count,
+          isActive: key.is_active,
+          createdAt: key.created_at,
+          revokedAt: key.revoked_at,
+        })),
+      });
     }
 
     // POST /api/admin/api-keys - Create a new API key
     if (method === "POST") {
-      const body = (await req.json()) as {
+      const { projectId, projectName, label } = req.body as {
         projectId?: string;
         projectName?: string;
         label?: string;
       };
-      const { projectId, projectName, label } = body;
 
       if (!projectId || !projectName || !label) {
-        return new Response(
-          JSON.stringify({
-            error: "projectId, projectName, and label are required",
-          }),
-          {
-            status: 400,
-            headers: {
-              "Content-Type": "application/json",
-              ...getCorsHeaders(),
-            },
-          }
-        );
+        return res.status(400).json({
+          error: "projectId, projectName, and label are required",
+        });
       }
 
       const result = await createApiKey({ projectId, projectName, label });
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          apiKey: result.apiKey, // IMPORTANT: Only shown once!
-          key: {
-            id: result.record.id,
-            projectId: result.record.project_id,
-            projectName: result.record.project_name,
-            prefix: result.record.api_key_prefix,
-            label: result.record.label,
-            createdAt: result.record.created_at,
-          },
-          warning: "Save this API key now - it will not be shown again!",
-        }),
-        {
-          status: 201,
-          headers: {
-            "Content-Type": "application/json",
-            ...getCorsHeaders(),
-          },
-        }
-      );
+      return res.status(201).json({
+        success: true,
+        apiKey: result.apiKey, // IMPORTANT: Only shown once!
+        key: {
+          id: result.record.id,
+          projectId: result.record.project_id,
+          projectName: result.record.project_name,
+          prefix: result.record.api_key_prefix,
+          label: result.record.label,
+          createdAt: result.record.created_at,
+        },
+        warning: "Save this API key now - it will not be shown again!",
+      });
     }
 
     // DELETE /api/admin/api-keys/:keyId - Revoke an API key
     if (method === "DELETE") {
-      const body = (await req.json()) as { keyId?: string };
-      const { keyId } = body;
+      const { keyId } = req.body as { keyId?: string };
 
       if (!keyId) {
-        return new Response(
-          JSON.stringify({
-            error: "keyId is required in request body",
-          }),
-          {
-            status: 400,
-            headers: {
-              "Content-Type": "application/json",
-              ...getCorsHeaders(),
-            },
-          }
-        );
+        return res.status(400).json({
+          error: "keyId is required in request body",
+        });
       }
 
       await revokeApiKey(keyId);
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "API key revoked successfully",
-        }),
-        {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            ...getCorsHeaders(),
-          },
-        }
-      );
+      return res.status(200).json({
+        success: true,
+        message: "API key revoked successfully",
+      });
     }
 
     // PUT /api/admin/api-keys/:keyId/rotate - Rotate an API key
     if (method === "PUT") {
-      const body = (await req.json()) as { keyId?: string };
-      const { keyId } = body;
+      const { keyId } = req.body as { keyId?: string };
 
       if (!keyId) {
-        return new Response(
-          JSON.stringify({
-            error: "keyId is required in request body",
-          }),
-          {
-            status: 400,
-            headers: {
-              "Content-Type": "application/json",
-              ...getCorsHeaders(),
-            },
-          }
-        );
+        return res.status(400).json({
+          error: "keyId is required in request body",
+        });
       }
 
       const result = await rotateApiKey(keyId);
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          apiKey: result.apiKey, // IMPORTANT: Only shown once!
-          key: {
-            id: result.record.id,
-            projectId: result.record.project_id,
-            projectName: result.record.project_name,
-            prefix: result.record.api_key_prefix,
-            label: result.record.label,
-            createdAt: result.record.created_at,
-          },
-          warning: "Save this new API key now - it will not be shown again!",
-        }),
-        {
-          status: 200,
-          headers: {
-            "Content-Type": "application/json",
-            ...getCorsHeaders(),
-          },
-        }
-      );
+      return res.status(200).json({
+        success: true,
+        apiKey: result.apiKey, // IMPORTANT: Only shown once!
+        key: {
+          id: result.record.id,
+          projectId: result.record.project_id,
+          projectName: result.record.project_name,
+          prefix: result.record.api_key_prefix,
+          label: result.record.label,
+          createdAt: result.record.created_at,
+        },
+        warning: "Save this new API key now - it will not be shown again!",
+      });
     }
 
     // Method not allowed
-    return new Response(
-      JSON.stringify({
-        error: "Method not allowed",
-        allowedMethods: ["GET", "POST", "DELETE", "PUT"],
-      }),
-      {
-        status: 405,
-        headers: {
-          "Content-Type": "application/json",
-          ...getCorsHeaders(),
-        },
-      }
-    );
+    return res.status(405).json({
+      error: "Method not allowed",
+      allowedMethods: ["GET", "POST", "DELETE", "PUT"],
+    });
   } catch (error) {
     console.error("Admin API keys error:", error);
-    return new Response(
-      JSON.stringify({
-        error: "Internal server error",
-        details: error instanceof Error ? error.message : "Unknown error",
-      }),
-      {
-        status: 500,
-        headers: {
-          "Content-Type": "application/json",
-          ...getCorsHeaders(),
-        },
-      }
-    );
+    return res.status(500).json({
+      error: "Internal server error",
+      details: error instanceof Error ? error.message : "Unknown error",
+    });
   }
 }
