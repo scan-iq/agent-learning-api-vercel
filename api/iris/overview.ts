@@ -28,16 +28,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const supabase = getSupabaseClient();
 
-      // Get all projects (for now just return the authenticated project)
-      // TODO: Extend to support multi-project overview for organizations
-      const projectIds = [project.projectId];
+      // FIXED: Show ALL projects (multi-project overview)
+      // Don't filter by authenticated project - show everything for dashboard
 
-      // Fetch data from multiple tables in parallel
+      // Fetch data from multiple tables in parallel (NO project filtering)
       const [expertsResult, reportsResult, reflexionsResult, eventsResult] = await Promise.all([
-        supabase.from('expert_signatures').select('*').in('project', projectIds).eq('active', true),
-        supabase.from('iris_reports').select('*').in('project', projectIds).order('created_at', { ascending: false }).limit(100),
-        supabase.from('reflexion_bank').select('*').in('project', projectIds).order('created_at', { ascending: false }).limit(50),
-        supabase.from('iris_telemetry').select('*').in('project_id', projectIds).order('created_at', { ascending: false }).limit(100),
+        supabase.from('expert_signatures').select('*').eq('active', true),
+        supabase.from('iris_reports').select('*').order('created_at', { ascending: false }).limit(100),
+        supabase.from('reflexion_bank').select('*').order('created_at', { ascending: false }).limit(50),
+        supabase.from('iris_telemetry').select('*').order('created_at', { ascending: false }).limit(100),
       ]);
 
       const experts = expertsResult.data || [];
