@@ -21,7 +21,8 @@ import {
  * TODO: Replace with proper admin authentication
  */
 function isAdminRequest(req: VercelRequest): boolean {
-  const adminKey = req.headers["x-admin-key"] as string;
+  // Headers are case-insensitive, but Express/Vercel normalizes them to lowercase
+  const adminKey = (req.headers["x-admin-key"] || req.headers["X-Admin-Key"]) as string;
   const expectedAdminKey = process.env.ADMIN_API_KEY;
 
   if (!expectedAdminKey) {
