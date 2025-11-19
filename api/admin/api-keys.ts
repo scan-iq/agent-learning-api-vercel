@@ -22,17 +22,8 @@ import {
  */
 function isAdminRequest(req: VercelRequest): boolean {
   // Headers are case-insensitive, but Express/Vercel normalizes them to lowercase
-  const adminKey = (req.headers["x-admin-key"] || req.headers["X-Admin-Key"]) as string;
-  const expectedAdminKey = process.env.ADMIN_API_KEY;
-
-  // Debug logging
-  console.log("Auth check:", {
-    hasAdminKey: !!adminKey,
-    adminKeyPrefix: adminKey?.substring(0, 10),
-    hasExpected: !!expectedAdminKey,
-    expectedPrefix: expectedAdminKey?.substring(0, 10),
-    headersKeys: Object.keys(req.headers),
-  });
+  const adminKey = ((req.headers["x-admin-key"] || req.headers["X-Admin-Key"]) as string)?.trim();
+  const expectedAdminKey = process.env.ADMIN_API_KEY?.trim();
 
   if (!expectedAdminKey) {
     console.warn("ADMIN_API_KEY not set - admin endpoints are disabled");
