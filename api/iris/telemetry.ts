@@ -17,8 +17,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return withIrisAuthVercel(req, res, async (project, req, res) => {
     try {
-      await initCoreSupabase();
-
       const body = req.body as {
         expertId?: string;
         confidence?: number;
