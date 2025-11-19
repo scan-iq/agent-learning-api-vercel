@@ -1,4 +1,5 @@
 /**
+import { findProjectByApiKey, touchApiKeyUsage, isValidApiKeyFormat } from "./apiKeys.js";
  * API Key Authentication for iris-prime-api
  *
  * Validates API keys against Supabase project_config table
@@ -303,7 +304,7 @@ export async function authenticateIrisRequest(request) {
         });
     }
     // Import the new API key functions
-    const { findProjectByApiKey, touchApiKeyUsage, isValidApiKeyFormat } = await import('./apiKeys.js');
+    // Using functions from top-level import
     // Validate format first
     if (!isValidApiKeyFormat(apiKey)) {
         logAuthFailure('Invalid API key format');
@@ -380,7 +381,7 @@ export async function authenticateIrisRequestVercel(req) {
         });
     }
     // Import the new API key functions
-    const { findProjectByApiKey, touchApiKeyUsage, isValidApiKeyFormat } = await import('./apiKeys.js');
+    // Using functions from top-level import
     // Validate format first
     if (!isValidApiKeyFormat(apiKey)) {
         logAuthFailure('Invalid API key format');
