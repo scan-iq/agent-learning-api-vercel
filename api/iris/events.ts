@@ -1,0 +1,59 @@
+import { VercelRequest, VercelResponse } from '@vercel/node';
+import { requireAuth } from '../../lib/auth.js';
+import { initCoreSupabase } from '../../lib/supabase.js';
+
+/**
+ * POST /api/iris/events
+ *
+ * Log evaluation events and triggers for IRIS Prime
+ *
+ * Request Body:
+ * {
+ *   "eventType": "evaluation_triggered" | "anomaly_detected" | "pattern_found",
+ *   "projectId": "string",
+ *   "metadata": { ... }
+ * }
+ */
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    // Authenticate request
+    const authenticatedProjectId = await requireAuth(req as any);
+    
+    await initCoreSupabase();
+
+    const { eventType, projectId } = req.body;
+
+    if (!eventType) {
+      return res.status(400).json({ error: 'eventType is required' });
+    }
+
+    const targetProjectId = projectId || authenticatedProjectId;
+
+    // Import IRIS Prime from core library
+    const { irisPrime } = await import('@foxruv/agent-learning-core');
+
+    // Log the event using proper method
+    await irisPrime.evaluateProject(targetProjectId);
+
+    return res.status(201).json({
+      success: true,
+      message: 'Event logged successfully',
+      eventType,
+      projectId: targetProjectId,
+      timestamp: new Date().toISOString(),
+    });
+  } catch (error) {
+    console.error('Event logging error:', error);
+
+    const message = error instanceof Error ? error.message : 'Failed to log event';
+    return res.status(500).json({
+      success: false,
+      error: message,
+      timestamp: new Date().toISOString(),
+    });
+  }
+}

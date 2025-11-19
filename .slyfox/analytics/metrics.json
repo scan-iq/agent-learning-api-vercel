@@ -1,0 +1,17 @@
+{
+  "totalFixes": 0,
+  "successfulFixes": 0,
+  "failedFixes": 0,
+  "successRate": 0,
+  "avgConfidence": 0,
+  "codeQualityScore": 0,
+  "qualityTrend": 0,
+  "fixesThisWeek": 0,
+  "fixesThisMonth": 0,
+  "highConfidenceFixes": 0,
+  "fixHistory": [],
+  "patterns": {},
+  "badges": [],
+  "topPatterns": [],
+  "lastUpdated": "2025-11-18T19:08:05.399Z"
+}
