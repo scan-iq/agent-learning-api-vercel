@@ -110,4 +110,40 @@ export declare function withIrisAuth(request: Request, handler: (project: {
     projectName: string;
     keyId: string;
 }, request: Request) => Promise<Response>): Promise<Response>;
+/**
+ * NEW VERCEL-COMPATIBLE WRAPPER
+ * ================================
+ */
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+/**
+ * Authenticate IRIS API request using Vercel Request/Response
+ *
+ * This version works with VercelRequest instead of Web API Request
+ *
+ * @param req - Vercel request with headers property
+ * @returns Project info { projectId, projectName, keyId }
+ * @throws UnauthorizedError if authentication fails
+ */
+export declare function authenticateIrisRequestVercel(req: VercelRequest): Promise<{
+    projectId: string;
+    projectName: string;
+    keyId: string;
+}>;
+/**
+ * Middleware wrapper for IRIS API routes (Vercel version)
+ * Use this in your Vercel API handlers for automatic authentication
+ *
+ * @example
+ * import type { VercelRequest, VercelResponse } from '@vercel/node';
+ * export default async function handler(req: VercelRequest, res: VercelResponse) {
+ *   return withIrisAuthVercel(req, res, async (project, req, res) => {
+ *     return res.status(200).json({ projectId: project.projectId });
+ *   });
+ * }
+ */
+export declare function withIrisAuthVercel(req: VercelRequest, res: VercelResponse, handler: (project: {
+    projectId: string;
+    projectName: string;
+    keyId: string;
+}, req: VercelRequest, res: VercelResponse) => Promise<void | VercelResponse>): Promise<void | VercelResponse>;
 //# sourceMappingURL=auth.d.ts.map

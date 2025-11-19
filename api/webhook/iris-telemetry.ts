@@ -33,8 +33,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     // Initialize Supabase with IRIS's credentials (backend has them)
-    const supabaseUrl = process.env.FOXRUV_SUPABASE_URL;
-    const supabaseKey = process.env.FOXRUV_SUPABASE_SERVICE_ROLE_KEY;
+    const supabaseUrl = process.env.FOXRUV_SUPABASE_URL?.trim();
+    const supabaseKey = process.env.FOXRUV_SUPABASE_SERVICE_ROLE_KEY?.trim();
 
     if (!supabaseUrl || !supabaseKey) {
       console.warn('Supabase not configured - telemetry lost');

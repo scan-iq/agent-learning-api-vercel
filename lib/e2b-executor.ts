@@ -27,7 +27,7 @@ export class IrisCodeExecutor {
   private activeSandboxes: Map<string, Sandbox>;
 
   constructor(config: E2BExecutorConfig = {}) {
-    this.apiKey = config.apiKey || process.env.E2B_API_KEY || '';
+    this.apiKey = config.apiKey || process.env.E2B_API_KEY?.trim() || '';
     this.template = config.template || 'nodejs';
     this.timeout = config.timeout || 300000; // 5 minutes
     this.activeSandboxes = new Map();

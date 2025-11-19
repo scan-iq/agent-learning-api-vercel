@@ -22,8 +22,8 @@ function getSupabaseClient(): SupabaseClient {
     return supabaseClient;
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_KEY;
+  const supabaseUrl = process.env.SUPABASE_URL?.trim();
+  const supabaseKey = process.env.SUPABASE_SERVICE_KEY?.trim();
 
   if (!supabaseUrl || !supabaseKey) {
     throw new Error('SUPABASE_URL and SUPABASE_SERVICE_KEY environment variables are required');
@@ -426,5 +426,125 @@ export async function withIrisAuth(
   } catch (error) {
     const { errorToResponse } = await import('./errors.js');
     return errorToResponse(error, new URL(request.url).pathname);
+  }
+}
+
+/**
+ * NEW VERCEL-COMPATIBLE WRAPPER
+ * ================================
+ */
+
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+
+/**
+ * Authenticate IRIS API request using Vercel Request/Response
+ *
+ * This version works with VercelRequest instead of Web API Request
+ *
+ * @param req - Vercel request with headers property
+ * @returns Project info { projectId, projectName, keyId }
+ * @throws UnauthorizedError if authentication fails
+ */
+export async function authenticateIrisRequestVercel(req: VercelRequest): Promise<{
+  projectId: string;
+  projectName: string;
+  keyId: string;
+}> {
+  // Extract API key from Vercel request headers
+  const authHeader = (req.headers['authorization'] || req.headers['Authorization']) as string | undefined;
+
+  if (!authHeader) {
+    logAuthFailure('Missing Authorization header in IRIS request');
+    throw new UnauthorizedError('Authorization header is required', {
+      hint: 'Include "Authorization: Bearer <your-api-key>" header',
+    });
+  }
+
+  // Support "Bearer <key>" format
+  let apiKey: string;
+  if (authHeader.startsWith('Bearer ')) {
+    apiKey = authHeader.substring(7).trim();
+  } else {
+    apiKey = authHeader.trim();
+  }
+
+  if (!apiKey) {
+    logAuthFailure('Empty API key in Authorization header');
+    throw new UnauthorizedError('API key is required', {
+      hint: 'Include "Authorization: Bearer <your-api-key>" header',
+    });
+  }
+
+  // Import the new API key functions
+  const { findProjectByApiKey, touchApiKeyUsage, isValidApiKeyFormat } = await import('./apiKeys.js');
+
+  // Validate format first
+  if (!isValidApiKeyFormat(apiKey)) {
+    logAuthFailure('Invalid API key format');
+    throw new UnauthorizedError('Invalid API key format', {
+      hint: 'API keys should start with "sk_live_"',
+    });
+  }
+
+  // Find project by API key
+  const project = await findProjectByApiKey(apiKey);
+
+  if (!project) {
+    logAuthFailure('Invalid or inactive API key');
+    throw new UnauthorizedError('Invalid or inactive API key', {
+      hint: 'Check that your API key is correct and has not been revoked',
+    });
+  }
+
+  // Track usage asynchronously (don't block the request)
+  touchApiKeyUsage(project.keyId).catch((err) => {
+    console.warn('Failed to track API key usage:', err);
+  });
+
+  return project;
+}
+
+/**
+ * Middleware wrapper for IRIS API routes (Vercel version)
+ * Use this in your Vercel API handlers for automatic authentication
+ *
+ * @example
+ * import type { VercelRequest, VercelResponse } from '@vercel/node';
+ * export default async function handler(req: VercelRequest, res: VercelResponse) {
+ *   return withIrisAuthVercel(req, res, async (project, req, res) => {
+ *     return res.status(200).json({ projectId: project.projectId });
+ *   });
+ * }
+ */
+export async function withIrisAuthVercel(
+  req: VercelRequest,
+  res: VercelResponse,
+  handler: (
+    project: { projectId: string; projectName: string; keyId: string },
+    req: VercelRequest,
+    res: VercelResponse
+  ) => Promise<void | VercelResponse>
+): Promise<void | VercelResponse> {
+  try {
+    const project = await authenticateIrisRequestVercel(req);
+    return await handler(project, req, res);
+  } catch (error) {
+    // Handle errors by sending JSON response
+    if (error instanceof UnauthorizedError) {
+      return res.status(401).json({
+        error: error.message,
+        statusCode: 401,
+        hint: error.details?.hint || 'Check your API key',
+        timestamp: new Date().toISOString(),
+      });
+    }
+
+    // Generic error handling
+    const message = error instanceof Error ? error.message : 'Authentication failed';
+    return res.status(500).json({
+      error: message,
+      statusCode: 500,
+      timestamp: new Date().toISOString(),
+    });
   }
 }

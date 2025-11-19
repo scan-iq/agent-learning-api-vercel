@@ -1,4 +1,5 @@
-import { withIrisAuth } from "../../lib/auth.js";
+import type { VercelRequest, VercelResponse } from "@vercel/node";
+import { withIrisAuthVercel } from "../../lib/auth.js";
 import { initCoreSupabase } from "../../lib/supabase.js";
 
 /**
@@ -6,19 +7,19 @@ import { initCoreSupabase } from "../../lib/supabase.js";
  * Authenticated endpoint - accepts telemetry data
  * Requires Authorization: Bearer <api-key> header
  */
-export default async function handler(req: Request) {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Method not allowed" }), {
-      status: 405,
-      headers: { "Content-Type": "application/json" },
+    return res.status(405).json({
+      error: "Method not allowed",
+      allowedMethods: ["POST"]
     });
   }
 
-  return withIrisAuth(req, async (project, req) => {
+  return withIrisAuthVercel(req, res, async (project, req, res) => {
     try {
       await initCoreSupabase();
 
-      const body = (await req.json()) as {
+      const body = req.body as {
         expertId?: string;
         confidence?: number;
         latencyMs?: number;
@@ -29,15 +30,9 @@ export default async function handler(req: Request) {
 
       // Validate required fields
       if (!expertId) {
-        return new Response(
-          JSON.stringify({
-            error: "expertId is required",
-          }),
-          {
-            status: 400,
-            headers: { "Content-Type": "application/json" },
-          }
-        );
+        return res.status(400).json({
+          error: "expertId is required",
+        });
       }
 
       // Import and call logTelemetry from core
@@ -51,30 +46,18 @@ export default async function handler(req: Request) {
         ...rest,
       });
 
-      return new Response(
-        JSON.stringify({
-          success: true,
-          projectId: project.projectId,
-          projectName: project.projectName,
-          expertId,
-        }),
-        {
-          status: 201,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return res.status(201).json({
+        success: true,
+        projectId: project.projectId,
+        projectName: project.projectName,
+        expertId,
+      });
     } catch (error) {
       console.error("Telemetry error:", error);
-      return new Response(
-        JSON.stringify({
-          error: "Failed to log telemetry",
-          details: error instanceof Error ? error.message : "Unknown error",
-        }),
-        {
-          status: 500,
-          headers: { "Content-Type": "application/json" },
-        }
-      );
+      return res.status(500).json({
+        error: "Failed to log telemetry",
+        details: error instanceof Error ? error.message : "Unknown error",
+      });
     }
   });
 }

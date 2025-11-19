@@ -11,12 +11,9 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import {
-  requireAuth,
-  handleApiError,
-  rateLimit,
-} from '../../lib';
-import { getExecutor } from '../../lib/e2b-executor';
+import { withIrisAuthVercel } from '../../lib/auth.js';
+import { rateLimit } from '../../lib/rate-limit.js';
+import { getExecutor } from '../../lib/e2b-executor.js';
 
 export default async function handler(
   req: VercelRequest,
@@ -29,87 +26,84 @@ export default async function handler(
       windowMs: 60000,
     });
 
-    // Authenticate request
-    const auth = await requireAuth(req, res);
-    if (!auth) {
-      return;
-    }
+    // Authenticate and execute with project context
+    return withIrisAuthVercel(req, res, async (project, req, res) => {
+      const executor = getExecutor();
 
-    const executor = getExecutor();
+      // Handle GET - Get sandbox status
+      if (req.method === 'GET') {
+        const { sandboxId } = req.query;
 
-    // Handle GET - Get sandbox status
-    if (req.method === 'GET') {
-      const { sandboxId } = req.query;
+        if (!sandboxId || typeof sandboxId !== 'string') {
+          return res.status(400).json({
+            error: 'Validation Error',
+            message: 'sandboxId query parameter is required',
+            statusCode: 400,
+            timestamp: new Date().toISOString(),
+          });
+        }
 
-      if (!sandboxId || typeof sandboxId !== 'string') {
-        res.status(400).json({
-          error: 'Validation Error',
-          message: 'sandboxId query parameter is required',
-          statusCode: 400,
+        const sandbox = await executor.getSandbox(sandboxId);
+
+        return res.status(200).json({
+          sandboxId,
+          active: sandbox !== null,
+          totalActive: executor.getActiveSandboxCount(),
           timestamp: new Date().toISOString(),
         });
-        return;
       }
 
-      const sandbox = await executor.getSandbox(sandboxId);
+      // Handle DELETE - Close sandbox(es)
+      if (req.method === 'DELETE') {
+        const { sandboxId, all } = req.query;
 
-      res.status(200).json({
-        sandboxId,
-        active: sandbox !== null,
-        totalActive: executor.getActiveSandboxCount(),
+        // Close all sandboxes
+        if (all === 'true') {
+          await executor.closeAll();
+          return res.status(200).json({
+            message: 'All sandboxes closed',
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        // Close specific sandbox
+        if (!sandboxId || typeof sandboxId !== 'string') {
+          return res.status(400).json({
+            error: 'Validation Error',
+            message: 'sandboxId query parameter is required',
+            statusCode: 400,
+            timestamp: new Date().toISOString(),
+          });
+        }
+
+        await executor.closeSandbox(sandboxId);
+        return res.status(200).json({
+          message: `Sandbox ${sandboxId} closed`,
+          timestamp: new Date().toISOString(),
+        });
+      }
+
+      // Method not allowed
+      return res.status(405).json({
+        error: 'Method Not Allowed',
+        message: 'Only GET and DELETE requests are supported',
+        statusCode: 405,
         timestamp: new Date().toISOString(),
       });
-      return;
-    }
-
-    // Handle DELETE - Close sandbox(es)
-    if (req.method === 'DELETE') {
-      const { sandboxId, all } = req.query;
-
-      // Close all sandboxes
-      if (all === 'true') {
-        await executor.closeAll();
-        res.status(200).json({
-          message: 'All sandboxes closed',
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      // Close specific sandbox
-      if (!sandboxId || typeof sandboxId !== 'string') {
-        res.status(400).json({
-          error: 'Validation Error',
-          message: 'sandboxId query parameter is required',
-          statusCode: 400,
-          timestamp: new Date().toISOString(),
-        });
-        return;
-      }
-
-      await executor.closeSandbox(sandboxId);
-      res.status(200).json({
-        message: `Sandbox ${sandboxId} closed`,
-        timestamp: new Date().toISOString(),
-      });
-      return;
-    }
-
-    // Method not allowed
-    res.status(405).json({
-      error: 'Method Not Allowed',
-      message: 'Only GET and DELETE requests are supported',
-      statusCode: 405,
+    });
+  } catch (error) {
+    console.error('Sandbox management error:', error);
+    return res.status(500).json({
+      error: 'Internal Server Error',
+      message: error instanceof Error ? error.message : 'Unknown error',
+      statusCode: 500,
       timestamp: new Date().toISOString(),
     });
-
-  } catch (error) {
-    handleApiError(error, req, res);
   }
 }
 
 export const config = {
   api: {
-    bodyParser: false,
+    bodyParser: true,
   },
 };
