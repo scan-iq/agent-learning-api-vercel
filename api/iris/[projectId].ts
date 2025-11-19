@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { irisPrime } from "@foxruv/agent-learning-core";
 import { withIrisAuthVercel } from '../../lib/auth.js';
 import { initCoreSupabase, getSupabaseClient } from '../../lib/supabase.js';
 import { transformEvaluation } from '../../lib/transform.js';
@@ -62,7 +63,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // If no historical data, run new evaluation
       if (!data || data.length === 0) {
-        const { irisPrime } = await import('@foxruv/agent-learning-core');
+        // Using irisPrime from static import
 
         const evaluation = await irisPrime.evaluateProject(projectId);
 

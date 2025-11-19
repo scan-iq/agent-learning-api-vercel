@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { irisPrime } from "@foxruv/agent-learning-core";
 import { withIrisAuthVercel } from '../../lib/auth.js';
 import { initCoreSupabase } from '../../lib/supabase.js';
 import { transformEvaluation } from '../../lib/transform.js';
@@ -26,7 +27,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       await initCoreSupabase();
 
       // Import IRIS Prime from core library
-      const { irisPrime } = await import('@foxruv/agent-learning-core');
+      // Using irisPrime from static import
 
       // Get project ID from query or auth context
       const projectId = (req.query.projectId as string) || project.projectId;

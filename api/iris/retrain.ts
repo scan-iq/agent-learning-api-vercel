@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { irisPrime } from "@foxruv/agent-learning-core";
 import { withIrisAuthVercel } from '../../lib/auth.js';
 import { initCoreSupabase } from '../../lib/supabase.js';
 
@@ -30,7 +31,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const targetProjectId = projectId || project.projectId;
 
       // Import IRIS Prime from core library
-      const { irisPrime } = await import('@foxruv/agent-learning-core');
+      // Using irisPrime from static import
 
       // Trigger retraining using autoRetrainExperts
       const result = await irisPrime.autoRetrainExperts(targetProjectId);

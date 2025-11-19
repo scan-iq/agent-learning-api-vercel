@@ -1,6 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { withIrisAuthVercel } from "../../lib/auth.js";
 import { initCoreSupabase } from "../../lib/supabase.js";
+import { logTelemetry } from "@foxruv/agent-learning-core";
 
 /**
  * POST /api/iris/telemetry
@@ -35,9 +36,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      // Import and call logTelemetry from core
-      const { logTelemetry } = await import("@foxruv/agent-learning-core");
-
+      // Call logTelemetry from core
       await logTelemetry({
         expertId,
         confidence,

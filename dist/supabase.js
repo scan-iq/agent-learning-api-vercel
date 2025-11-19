@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { initSupabaseFromEnv } from "@foxruv/agent-learning-core";
 let supabaseClient = null;
 /**
  * Get or create Supabase client singleton
@@ -25,7 +26,7 @@ export function getSupabaseClient() {
  */
 export async function initCoreSupabase() {
     try {
-        const { initSupabaseFromEnv } = await import('@foxruv/agent-learning-core');
+        // Using initSupabaseFromEnv from static import
         // Set environment variables if not already set
         if (!process.env.SUPABASE_URL) {
             throw new Error('SUPABASE_URL environment variable is required');
