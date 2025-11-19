@@ -1,11 +1,10 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { irisPrime } from "@foxruv/agent-learning-core";
 import { withIrisAuthVercel } from '../../lib/auth.js';
-import { initCoreSupabase, getSupabaseClient } from '../../lib/supabase.js';
+import { getSupabaseClient } from '../../lib/supabase.js';
 import { transformEvaluation } from '../../lib/transform.js';
 
 /**
- * GET /api/iris/evaluate/:projectId
+ * GET /api/iris/:projectId
  *
  * Get evaluation results for a specific project
  *
@@ -24,6 +23,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return withIrisAuthVercel(req, res, async (project, req, res) => {
     try {
+      const supabase = getSupabaseClient();
+
       // Extract project ID from URL path or use authenticated project
       const projectId = (req.query.projectId as string) || project.projectId;
 
@@ -31,17 +32,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return res.status(400).json({ error: 'Project ID is required' });
       }
 
-      await initCoreSupabase();
-      const supabase = getSupabaseClient();
-
       // Parse query parameters
       const fromDate = req.query.fromDate as string | undefined;
       const toDate = req.query.toDate as string | undefined;
       const limit = parseInt(req.query.limit as string) || 100;
 
-      // Query iris_reports table for historical evaluations
+      // Query iris_telemetry table for project data
       let query = supabase
-        .from('iris_reports')
+        .from('iris_telemetry')
         .select('*')
         .eq('project_id', projectId)
         .order('created_at', { ascending: false })
@@ -61,30 +59,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         throw new Error(`Database query failed: ${error.message}`);
       }
 
-      // If no historical data, run new evaluation
-      if (!data || data.length === 0) {
-        // Using irisPrime from static import
-
-        const evaluation = await irisPrime.evaluateProject(projectId);
-
-        const dashboardData = transformEvaluation(evaluation, projectId);
-
-        return res.status(200).json({
-          success: true,
-          data: dashboardData,
-          historical: false,
-          timestamp: new Date().toISOString(),
-        });
-      }
+      // Compute evaluation from telemetry data
+      const evaluation = {
+        projectId,
+        totalEvents: data?.length || 0,
+        avgConfidence: data && data.length > 0
+          ? data.reduce((sum: number, t: any) => sum + (t.confidence || 0), 0) / data.length
+          : 0,
+        timestamp: new Date().toISOString(),
+      };
 
       // Transform historical data
-      const evaluations = data.map(report => transformEvaluation(report, projectId));
+      const dashboardData = transformEvaluation(evaluation, projectId);
 
       return res.status(200).json({
         success: true,
-        data: evaluations,
+        data: dashboardData,
         historical: true,
-        count: evaluations.length,
+        count: data?.length || 0,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {

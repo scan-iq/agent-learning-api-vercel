@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { irisPrime } from "@foxruv/agent-learning-core";
 import { withIrisAuthVercel } from '../../lib/auth.js';
-import { initCoreSupabase } from '../../lib/supabase.js';
+import { getSupabaseClient } from '../../lib/supabase.js';
 
 /**
  * POST /api/iris/events
@@ -22,21 +21,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return withIrisAuthVercel(req, res, async (project, req, res) => {
     try {
-      await initCoreSupabase();
+      const supabase = getSupabaseClient();
 
-      const { eventType, projectId } = req.body;
+      const { eventType, metadata } = req.body;
 
       if (!eventType) {
         return res.status(400).json({ error: 'eventType is required' });
       }
 
-      const targetProjectId = projectId || project.projectId;
+      const targetProjectId = project.projectId;
 
-      // Import IRIS Prime from core library
-      // Using irisPrime from static import
+      // Insert event into iris_telemetry table
+      const { error } = await supabase
+        .from('iris_telemetry')
+        .insert({
+          project_id: targetProjectId,
+          event_type: eventType,
+          metadata: metadata || {},
+          created_at: new Date().toISOString(),
+        });
 
-      // Log the event using proper method
-      await irisPrime.evaluateProject(targetProjectId);
+      if (error) {
+        throw new Error(`Failed to log event: ${error.message}`);
+      }
 
       return res.status(201).json({
         success: true,

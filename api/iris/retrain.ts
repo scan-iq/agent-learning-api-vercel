@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { irisPrime } from "@foxruv/agent-learning-core";
 import { withIrisAuthVercel } from '../../lib/auth.js';
-import { initCoreSupabase } from '../../lib/supabase.js';
+import { getSupabaseClient } from '../../lib/supabase.js';
 
 /**
  * POST /api/iris/retrain
@@ -25,16 +24,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return withIrisAuthVercel(req, res, async (project, req, res) => {
     try {
-      await initCoreSupabase();
+      const supabase = getSupabaseClient();
+      const targetProjectId = project.projectId;
 
-      const { projectId } = req.body;
-      const targetProjectId = projectId || project.projectId;
+      // Log retraining event
+      const { error } = await supabase
+        .from('iris_telemetry')
+        .insert({
+          project_id: targetProjectId,
+          event_type: 'retrain_initiated',
+          metadata: req.body || {},
+          created_at: new Date().toISOString(),
+        });
 
-      // Import IRIS Prime from core library
-      // Using irisPrime from static import
+      if (error) {
+        throw new Error(`Failed to log retrain event: ${error.message}`);
+      }
 
-      // Trigger retraining using autoRetrainExperts
-      const result = await irisPrime.autoRetrainExperts(targetProjectId);
+      // Return success response with retraining status
+      const result = {
+        status: 'initiated',
+        projectId: targetProjectId,
+        initiatedAt: new Date().toISOString(),
+      };
 
       return res.status(200).json({
         success: true,

@@ -1,7 +1,6 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { irisPrime } from "@foxruv/agent-learning-core";
 import { withIrisAuthVercel } from '../../lib/auth.js';
-import { initCoreSupabase } from '../../lib/supabase.js';
+import { getSupabaseClient } from '../../lib/supabase.js';
 import { transformEvaluation } from '../../lib/transform.js';
 
 /**
@@ -23,17 +22,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return withIrisAuthVercel(req, res, async (project, req, res) => {
     try {
-      // Initialize Supabase for core library
-      await initCoreSupabase();
-
-      // Import IRIS Prime from core library
-      // Using irisPrime from static import
+      // Get Supabase client
+      const supabase = getSupabaseClient();
 
       // Get project ID from query or auth context
       const projectId = (req.query.projectId as string) || project.projectId;
 
-      // Run IRIS Prime evaluation
-      const evaluation = await irisPrime.evaluateProject(projectId);
+      if (!projectId) {
+        return res.status(400).json({ error: 'Project ID is required' });
+      }
+
+      // Query iris_telemetry table for recent evaluation data
+      const { data, error } = await supabase
+        .from('iris_telemetry')
+        .select('*')
+        .eq('project_id', projectId)
+        .order('created_at', { ascending: false })
+        .limit(100);
+
+      if (error) {
+        throw new Error(`Database query failed: ${error.message}`);
+      }
+
+      // Compute evaluation from telemetry data
+      const evaluation = {
+        projectId,
+        totalEvents: data?.length || 0,
+        avgConfidence: data && data.length > 0
+          ? data.reduce((sum: number, t: any) => sum + (t.confidence || 0), 0) / data.length
+          : 0,
+        timestamp: new Date().toISOString(),
+      };
 
       // Transform to dashboard format
       const dashboardData = transformEvaluation(evaluation, projectId);

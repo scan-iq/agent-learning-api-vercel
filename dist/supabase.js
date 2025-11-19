@@ -1,5 +1,4 @@
 import { createClient } from '@supabase/supabase-js';
-import { initSupabaseFromEnv } from "@foxruv/agent-learning-core";
 let supabaseClient = null;
 /**
  * Get or create Supabase client singleton
@@ -20,22 +19,4 @@ export function getSupabaseClient() {
         },
     });
     return supabaseClient;
-}
-/**
- * Initialize Supabase for agent-learning-core
- */
-export async function initCoreSupabase() {
-    try {
-        // Using initSupabaseFromEnv from static import
-        // Set environment variables if not already set
-        if (!process.env.SUPABASE_URL) {
-            throw new Error('SUPABASE_URL environment variable is required');
-        }
-        await initSupabaseFromEnv();
-    }
-    catch (error) {
-        // agent-learning-core is optional, fallback to basic client
-        console.warn('agent-learning-core not available, using basic Supabase client');
-    }
-    return getSupabaseClient();
 }
