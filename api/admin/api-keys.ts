@@ -25,6 +25,15 @@ function isAdminRequest(req: VercelRequest): boolean {
   const adminKey = (req.headers["x-admin-key"] || req.headers["X-Admin-Key"]) as string;
   const expectedAdminKey = process.env.ADMIN_API_KEY;
 
+  // Debug logging
+  console.log("Auth check:", {
+    hasAdminKey: !!adminKey,
+    adminKeyPrefix: adminKey?.substring(0, 10),
+    hasExpected: !!expectedAdminKey,
+    expectedPrefix: expectedAdminKey?.substring(0, 10),
+    headersKeys: Object.keys(req.headers),
+  });
+
   if (!expectedAdminKey) {
     console.warn("ADMIN_API_KEY not set - admin endpoints are disabled");
     return false;
