@@ -426,6 +426,17 @@ test('rate limiting works', () => {
 
 ## 🚢 Deployment
 
+### Telemetry Replay (core)
+Set up a periodic job to run `npm run telemetry:replay` in the core repo so queued telemetry backfills after outages.
+- Cron: `*/15 * * * * cd /path/to/agent-learning-core && npm run telemetry:replay`
+- PM2: `pm2 start "npm run telemetry:replay" --name telemetry-replay --cron "*/15 * * * *"`
+- Health (core): `npm run telemetry:health` to surface queue/summary metrics; expose these via API if desired.
+
+### Decisions API
+- List drafts: `GET /api/iris/decisions[?status=pending|approved|rejected]`
+- Approve/reject: `POST /api/iris/decisions` with `{ id, status }`
+  - Auto-exec remains OFF; use approval flow to trigger execution downstream.
+
 ### Supabase Schema
 
 ```sql

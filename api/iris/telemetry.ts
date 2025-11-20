@@ -1,7 +1,8 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import { withIrisAuthVercel } from "../../lib/auth.js";
 import { logTelemetry } from "../../lib/iris-telemetry.js";
-import { logEnhancedTelemetry, type EnhancedTelemetryEvent } from "../../lib/enhanced-telemetry.js";
+import { logEnhancedTelemetry } from "../../lib/enhanced-telemetry.js";
+import { TelemetryEventSchema, EnhancedTelemetrySchema } from "../../lib/schemas.js";
 
 /**
  * POST /api/iris/telemetry
@@ -18,20 +19,27 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   return withIrisAuthVercel(req, res, async (project, req, res) => {
     try {
-      const body = req.body as Partial<EnhancedTelemetryEvent>;
-      const { expertId, ...telemetryData } = body;
+      const parsedEnhanced = EnhancedTelemetrySchema.safeParse(req.body);
+      const parsedBasic = TelemetryEventSchema.safeParse(req.body);
 
-      // Validate required fields
-      if (!expertId) {
+      if (!parsedEnhanced.success && !parsedBasic.success) {
         return res.status(400).json({
-          error: "expertId is required",
+          error: "Invalid telemetry payload",
+          issues: parsedEnhanced.success ? undefined : parsedEnhanced.error.flatten(),
         });
       }
 
+      const body = (parsedEnhanced.success ? parsedEnhanced.data : parsedBasic.data)!;
+      const { expertId, ...telemetryData } = body;
+
       // Use enhanced telemetry if additional fields are provided
       const hasEnhancedData = !!(
-        body.agentType || body.modelName || body.reasoningSteps ||
-        body.toolCalls || body.causalChain || body.reflexionData
+        ("agentType" in body && body.agentType) ||
+        ("modelName" in body && body.modelName) ||
+        ("reasoningSteps" in body && body.reasoningSteps) ||
+        ("toolCalls" in body && body.toolCalls) ||
+        ("causalChain" in body && body.causalChain) ||
+        ("reflexionData" in body && body.reflexionData)
       );
 
       if (hasEnhancedData) {
