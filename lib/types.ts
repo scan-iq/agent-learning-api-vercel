@@ -140,7 +140,7 @@ export interface CodeExecutionResponse {
   timestamp: string;
 }
 
-// IRIS Prime Tool Types
+// IRIS Tool Types
 export interface PatternDiscoveryConfig {
   minSupport?: number;
   minConfidence?: number;

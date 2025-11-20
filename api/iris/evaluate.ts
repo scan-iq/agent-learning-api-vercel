@@ -6,7 +6,7 @@ import { transformEvaluation } from '../../lib/transform.js';
 /**
  * GET /api/iris/evaluate
  *
- * Run IRIS Prime evaluation and return dashboard-compatible results
+ * Run IRIS evaluation and return dashboard-compatible results
  *
  * Query Parameters:
  * - projectId: Project identifier (optional, uses auth context if not provided)

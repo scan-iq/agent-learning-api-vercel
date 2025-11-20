@@ -37,7 +37,7 @@ export interface DashboardEvaluation {
     status: 'healthy' | 'warning' | 'critical';
 }
 /**
- * Transform IRIS Prime evaluation result to dashboard format
+ * Transform IRIS evaluation result to dashboard format
  */
 export declare function transformEvaluation(evaluation: any, projectId: string): DashboardEvaluation;
 /**

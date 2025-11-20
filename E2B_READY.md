@@ -2,7 +2,7 @@
 
 ## 🎉 Implementation Complete
 
-The E2B sandbox integration for IRIS Prime is **complete and ready for deployment**.
+The E2B sandbox integration for IRIS is **complete and ready for deployment**.
 
 ## 📦 What's Been Created
 
@@ -124,13 +124,13 @@ await iris.close();
 
 ```
 ┌─────────────────────┐
-│  IRIS Prime Console │
+│  IRIS Console │
 │   (React Dashboard) │
 └──────────┬──────────┘
            │ POST /api/iris/execute
            ↓
 ┌─────────────────────┐
-│   IRIS Prime API    │
+│   IRIS API    │
 │  (Vercel Functions) │
 │                     │
 │  • Authentication   │
@@ -282,7 +282,7 @@ await iris.close();
 ## 🎯 Usage Example
 
 ```typescript
-// In IRIS Prime Dashboard
+// In IRIS Dashboard
 const code = `
 import { iris, projectId, sessionId } from './iris-prime';
 
@@ -430,7 +430,7 @@ function ExecutionPanel() {
 The E2B integration is **production-ready** and follows Anthropic's pattern:
 
 - ✅ Code executes in isolated sandboxes
-- ✅ Full IRIS Prime MCP access
+- ✅ Full IRIS MCP access
 - ✅ Secure authentication
 - ✅ Rate limiting
 - ✅ Error handling

@@ -1,5 +1,5 @@
 /**
- * IRIS Prime Sandbox Management API Endpoint
+ * IRIS Sandbox Management API Endpoint
  *
  * Manage persistent E2B sandboxes for code execution sessions.
  *

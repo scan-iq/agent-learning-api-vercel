@@ -1,5 +1,5 @@
 /**
- * Iris Prime API - Production-grade authentication and validation
+ * Iris API - Production-grade authentication and validation
  *
  * Main entry point for the API library
  */

@@ -1,7 +1,7 @@
 #!/usr/bin/env npx tsx
 
 /**
- * Generate API Key for IRIS Prime Projects
+ * Generate API Key for IRIS Projects
  *
  * Usage:
  *   npx tsx scripts/generate-api-key.ts nfl-predictor

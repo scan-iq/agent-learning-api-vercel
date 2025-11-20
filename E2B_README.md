@@ -1,6 +1,6 @@
-# IRIS Prime E2B Code Execution
+# IRIS E2B Code Execution
 
-Execute TypeScript code in isolated E2B sandboxes with full access to IRIS Prime MCP tools.
+Execute TypeScript code in isolated E2B sandboxes with full access to IRIS MCP tools.
 
 ## 🚀 Quick Start
 
@@ -41,7 +41,7 @@ export SUPABASE_SERVICE_KEY=your_service_key
 ## 🎯 Features
 
 - ✅ **Isolated Execution**: Code runs in secure E2B sandboxes
-- ✅ **IRIS Prime Tools**: Full MCP server access
+- ✅ **IRIS Tools**: Full MCP server access
 - ✅ **Pattern Discovery**: Analyze and discover patterns
 - ✅ **Reflexion**: Self-improvement and evaluation
 - ✅ **Consensus**: Multi-agent decision making

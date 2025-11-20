@@ -1,9 +1,9 @@
 /**
- * IRIS Prime Code Execution API Endpoint
+ * IRIS Code Execution API Endpoint
  *
  * POST /api/iris/execute
  *
- * Executes TypeScript code in E2B sandbox with IRIS Prime MCP server access.
+ * Executes TypeScript code in E2B sandbox with IRIS MCP server access.
  * Supports both one-off execution and persistent sandbox sessions.
  *
  * Authentication: Requires valid API key in Authorization header

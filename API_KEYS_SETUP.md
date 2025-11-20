@@ -1,8 +1,8 @@
-# IRIS Prime API Keys System - Setup Guide
+# IRIS API Keys System - Setup Guide
 
 ## Overview
 
-The IRIS Prime API now supports secure API key authentication with the following features:
+The IRIS API now supports secure API key authentication with the following features:
 
 - **Multiple keys per project** - Create separate keys for different environments (production, staging, CI/CD)
 - **Usage tracking** - Track usage count and last access time for each key
@@ -114,7 +114,7 @@ vercel --prod
 
 ### 4. Update Client Projects
 
-Projects using IRIS Prime need to update their integration:
+Projects using IRIS need to update their integration:
 
 **Before (Direct Supabase):**
 ```typescript
@@ -251,7 +251,7 @@ Content-Type: application/json
 
 ### Access API Keys Page
 
-1. Navigate to IRIS Prime Console: `http://localhost:5173`
+1. Navigate to IRIS Console: `http://localhost:5173`
 2. Click **"API Keys"** button in the header
 3. Or directly: `http://localhost:5173/settings/api-keys`
 

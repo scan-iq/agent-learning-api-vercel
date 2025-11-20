@@ -5,7 +5,7 @@ import { getSupabaseClient } from '../../lib/supabase.js';
 /**
  * POST /api/iris/retrain
  *
- * Trigger IRIS Prime model retraining
+ * Trigger IRIS model retraining
  *
  * Request Body:
  * {

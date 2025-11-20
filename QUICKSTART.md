@@ -1,4 +1,4 @@
-# Iris Prime API - Quick Start Guide
+# Iris API - Quick Start Guide
 
 ## 🚀 5-Minute Setup
 

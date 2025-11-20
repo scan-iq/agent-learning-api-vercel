@@ -1,12 +1,12 @@
 /**
- * E2B Sandbox Setup Script for IRIS Prime
+ * E2B Sandbox Setup Script for IRIS
  *
  * This module handles initialization and configuration of E2B sandboxes
- * with IRIS Prime MCP server integration.
+ * with IRIS MCP server integration.
  */
 import { Sandbox } from '@e2b/code-interpreter';
 /**
- * Setup E2B sandbox with IRIS Prime environment
+ * Setup E2B sandbox with IRIS environment
  */
 export async function setupIrisSandbox(options) {
     const startTime = Date.now();
@@ -51,7 +51,7 @@ export async function setupIrisSandbox(options) {
                 .join('\n');
             await sandbox.runCode(envCode, { language: 'javascript' });
         }
-        // Create IRIS Prime wrapper module
+        // Create IRIS wrapper module
         await createIrisWrapper(sandbox, options.projectId);
         // Verify MCP connection
         await verifyMcpConnection(sandbox);
@@ -71,12 +71,12 @@ export async function setupIrisSandbox(options) {
     }
 }
 /**
- * Create IRIS Prime wrapper module in sandbox
+ * Create IRIS wrapper module in sandbox
  */
 async function createIrisWrapper(sandbox, projectId) {
     const wrapperCode = `
 /**
- * IRIS Prime MCP Client Wrapper
+ * IRIS MCP Client Wrapper
  * Auto-generated for sandbox execution
  */
 

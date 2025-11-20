@@ -1,12 +1,12 @@
 /**
- * E2B Code Executor for IRIS Prime
+ * E2B Code Executor for IRIS
  *
- * Executes TypeScript code in isolated E2B sandboxes with IRIS Prime MCP server access.
+ * Executes TypeScript code in isolated E2B sandboxes with IRIS MCP server access.
  * Follows Anthropic's pattern of sandbox execution with MCP integration.
  *
  * Architecture:
  * - Creates E2B sandbox with Node.js runtime
- * - Mounts IRIS Prime MCP server wrappers
+ * - Mounts IRIS MCP server wrappers
  * - Executes user code with access to IRIS tools
  * - Returns formatted results with telemetry
  */
@@ -24,7 +24,7 @@ export declare class IrisCodeExecutor {
     private activeSandboxes;
     constructor(config?: E2BExecutorConfig);
     /**
-     * Execute TypeScript code in E2B sandbox with IRIS Prime access
+     * Execute TypeScript code in E2B sandbox with IRIS access
      */
     executeCode(code: string, options?: {
         projectId?: string;
@@ -37,7 +37,7 @@ export declare class IrisCodeExecutor {
      */
     private createSandbox;
     /**
-     * Setup IRIS Prime environment in sandbox
+     * Setup IRIS environment in sandbox
      */
     private setupIrisEnvironment;
     /**

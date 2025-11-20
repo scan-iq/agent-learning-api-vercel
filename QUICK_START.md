@@ -1,4 +1,4 @@
-# 🚀 IRIS Prime API Keys - Quick Start
+# 🚀 IRIS API Keys - Quick Start
 
 ## ⚡ 3-Step Setup
 

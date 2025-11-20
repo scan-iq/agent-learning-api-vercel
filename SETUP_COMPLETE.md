@@ -1,4 +1,4 @@
-# ✅ IRIS Prime API Keys - Setup Complete!
+# ✅ IRIS API Keys - Setup Complete!
 
 ## 🎉 What's Been Done
 

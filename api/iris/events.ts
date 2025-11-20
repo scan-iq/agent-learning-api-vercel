@@ -5,7 +5,7 @@ import { getSupabaseClient } from '../../lib/supabase.js';
 /**
  * POST /api/iris/events
  *
- * Log evaluation events and triggers for IRIS Prime
+ * Log evaluation events and triggers for IRIS
  *
  * Request Body:
  * {

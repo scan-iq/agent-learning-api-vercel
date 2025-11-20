@@ -1,4 +1,4 @@
-# Iris Prime API - System Architecture
+# Iris API - System Architecture
 
 ## 🏗️ High-Level Architecture
 
@@ -457,4 +457,4 @@ X-API-Version: 2
 
 **Version**: 1.0.0  
 **Last Updated**: 2025-11-17  
-**Maintainer**: Iris Prime Team
+**Maintainer**: Iris Team

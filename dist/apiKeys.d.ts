@@ -1,5 +1,5 @@
 /**
- * API Key Management for IRIS Prime
+ * API Key Management for IRIS
  *
  * Handles generation, hashing, validation, and lifecycle management of API keys.
  * Uses SHA-256 hashing for secure storage in Supabase.

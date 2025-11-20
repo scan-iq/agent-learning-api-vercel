@@ -1,8 +1,8 @@
 /**
- * E2B Sandbox Setup Script for IRIS Prime
+ * E2B Sandbox Setup Script for IRIS
  *
  * This module handles initialization and configuration of E2B sandboxes
- * with IRIS Prime MCP server integration.
+ * with IRIS MCP server integration.
  */
 import { Sandbox } from '@e2b/code-interpreter';
 export interface SandboxSetupOptions {
@@ -20,7 +20,7 @@ export interface SandboxSetupResult {
     setupTime: number;
 }
 /**
- * Setup E2B sandbox with IRIS Prime environment
+ * Setup E2B sandbox with IRIS environment
  */
 export declare function setupIrisSandbox(options: SandboxSetupOptions): Promise<SandboxSetupResult>;
 /**

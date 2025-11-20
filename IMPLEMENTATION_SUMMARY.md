@@ -1,4 +1,4 @@
-# Iris Prime API - Implementation Summary
+# Iris API - Implementation Summary
 
 ## ✅ Implementation Complete
 
@@ -270,7 +270,7 @@ const event = await parseJsonBody(request, validateTelemetryEvent);
 await GlobalMetrics.track(projectId, event.event, event.metadata);
 ```
 
-### With Iris Prime Console
+### With Iris Console
 
 ```typescript
 // Frontend makes authenticated requests

@@ -1,4 +1,4 @@
-# 🔑 IRIS Prime API Keys Setup Guide
+# 🔑 IRIS API Keys Setup Guide
 
 Complete guide to set up the API key management system across all three repositories.
 

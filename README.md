@@ -1,12 +1,12 @@
-# Iris Prime API
+# Iris API
 
-Production-grade authentication and validation utilities for the Iris Prime Console backend.
+Production-grade authentication and validation utilities for the Iris Console backend.
 
 ## 🏗️ Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    Iris Prime Console                        │
+│                    Iris Console                        │
 │                     (Frontend - React)                       │
 └────────────────────┬────────────────────────────────────────┘
                      │ HTTPS + Bearer Token

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Check existing data and seed test data for IRIS Prime dashboard
+ * Check existing data and seed test data for IRIS dashboard
  */
 
 import { createClient } from '@supabase/supabase-js';

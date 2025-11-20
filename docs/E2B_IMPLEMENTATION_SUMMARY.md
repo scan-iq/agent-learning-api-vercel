@@ -2,7 +2,7 @@
 
 ## Overview
 
-Successfully implemented E2B sandbox code execution for IRIS Prime following Anthropic's pattern of executing code in sandboxes with MCP server access.
+Successfully implemented E2B sandbox code execution for IRIS following Anthropic's pattern of executing code in sandboxes with MCP server access.
 
 ## Implementation Date
 
@@ -16,11 +16,11 @@ Dashboard → API Endpoint → E2B Executor → Sandbox → IRIS MCP Server → 
 
 ### Flow
 
-1. **User writes code** in IRIS Prime dashboard
+1. **User writes code** in IRIS dashboard
 2. **Dashboard sends** code to `/api/iris/execute` endpoint
 3. **API validates** authentication and rate limits
 4. **E2B Executor** creates/reuses sandbox
-5. **Sandbox runs** code with IRIS Prime MCP wrapper available
+5. **Sandbox runs** code with IRIS MCP wrapper available
 6. **MCP wrapper** calls IRIS tools (patterns, reflexion, consensus, etc.)
 7. **Results formatted** and returned to dashboard
 8. **Dashboard displays** output and telemetry
@@ -120,9 +120,9 @@ Dashboard → API Endpoint → E2B Executor → Sandbox → IRIS MCP Server → 
 - **Resource limits**: Memory, timeout, and size constraints
 - **Cleanup**: Automatic and manual cleanup options
 
-### IRIS Prime Integration
+### IRIS Integration
 
-All IRIS Prime tools available in sandbox via `import { iris } from './iris-prime'`:
+All IRIS tools available in sandbox via `import { iris } from './iris-prime'`:
 
 1. **Pattern Discovery**: `iris.discoverPatterns()`
 2. **Reflexion**: `iris.evaluateOutput()`
@@ -202,7 +202,7 @@ import { getExecutor } from '@iris-prime/api';
 
 const executor = getExecutor();
 const result = await executor.executeCode(`
-  console.log('Hello IRIS Prime!');
+  console.log('Hello IRIS!');
 `);
 ```
 
@@ -321,7 +321,7 @@ SUPABASE_SERVICE_KEY=your_service_key
 
 ## Integration Points
 
-### With IRIS Prime Console
+### With IRIS Console
 
 1. **Code Editor**: Dashboard provides code editor
 2. **Execute Button**: Sends code to `/api/iris/execute`
@@ -453,12 +453,12 @@ All executions logged with:
 E2B integration successfully implemented following Anthropic's pattern. The system provides:
 
 - **Isolated execution** in E2B sandboxes
-- **Full IRIS Prime access** via MCP wrappers
+- **Full IRIS access** via MCP wrappers
 - **Production-ready** with auth, rate limiting, and error handling
 - **Well-documented** with guides and examples
 - **Tested** with comprehensive test suite
 
-Ready for integration with IRIS Prime dashboard!
+Ready for integration with IRIS dashboard!
 
 ---
 

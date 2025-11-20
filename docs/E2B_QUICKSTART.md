@@ -1,11 +1,11 @@
 # E2B Code Execution - Quick Start Guide
 
-Get started with IRIS Prime code execution in E2B sandboxes in 5 minutes.
+Get started with IRIS code execution in E2B sandboxes in 5 minutes.
 
 ## Prerequisites
 
 - Node.js 18+
-- IRIS Prime API key
+- IRIS API key
 - E2B API key (get from https://e2b.dev)
 
 ## 1. Setup Environment
@@ -37,14 +37,14 @@ const executor = getExecutor({
 });
 
 const result = await executor.executeCode(`
-  console.log('Hello from IRIS Prime!');
+  console.log('Hello from IRIS!');
   return { success: true };
 `);
 
 console.log(result.output);
 ```
 
-### Using IRIS Prime Tools
+### Using IRIS Tools
 
 ```typescript
 const code = `

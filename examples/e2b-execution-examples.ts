@@ -1,8 +1,8 @@
 /**
- * E2B Code Execution Examples for IRIS Prime
+ * E2B Code Execution Examples for IRIS
  *
  * Demonstrates how to use the E2B integration for executing
- * IRIS Prime code in sandboxes.
+ * IRIS code in sandboxes.
  */
 
 // Example 1: Simple pattern discovery
@@ -136,7 +136,7 @@ const completeWorkflowExample = `
 import { iris, projectId, sessionId, context } from './iris-prime';
 
 async function completeWorkflow() {
-  console.log('Starting IRIS Prime workflow');
+  console.log('Starting IRIS workflow');
   console.log('Project:', projectId);
   console.log('Session:', sessionId);
 

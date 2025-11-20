@@ -3,7 +3,7 @@
  * data structures to dashboard-compatible formats
  */
 /**
- * Transform IRIS Prime evaluation result to dashboard format
+ * Transform IRIS evaluation result to dashboard format
  */
 export function transformEvaluation(evaluation, projectId) {
     const metrics = transformMetrics(evaluation.metrics || evaluation);

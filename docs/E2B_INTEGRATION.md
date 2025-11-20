@@ -1,14 +1,14 @@
-# E2B Code Execution Integration for IRIS Prime
+# E2B Code Execution Integration for IRIS
 
 ## Overview
 
-IRIS Prime now supports executing TypeScript code in isolated E2B sandboxes with full access to IRIS Prime MCP server tools. This enables dashboard users to write and execute code that leverages pattern discovery, reflexion, consensus, and other IRIS features.
+IRIS now supports executing TypeScript code in isolated E2B sandboxes with full access to IRIS MCP server tools. This enables dashboard users to write and execute code that leverages pattern discovery, reflexion, consensus, and other IRIS features.
 
 ## Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                    IRIS Prime Dashboard                     │
+│                    IRIS Dashboard                     │
 │                                                              │
 │  User writes TypeScript code                                │
 │  ↓                                                           │
@@ -18,7 +18,7 @@ IRIS Prime now supports executing TypeScript code in isolated E2B sandboxes with
                              │ HTTPS + API Key
                              ↓
 ┌─────────────────────────────────────────────────────────────┐
-│                   IRIS Prime API Server                     │
+│                   IRIS API Server                     │
 │                                                              │
 │  ┌──────────────────────────────────────────────┐          │
 │  │        IrisCodeExecutor (lib/e2b-executor)   │          │
@@ -48,7 +48,7 @@ IRIS Prime now supports executing TypeScript code in isolated E2B sandboxes with
 │                      │ MCP Protocol                         │
 │                      ↓                                       │
 │  ┌──────────────────────────────────────────────┐          │
-│  │      IRIS Prime MCP Server Wrapper           │          │
+│  │      IRIS MCP Server Wrapper           │          │
 │  │  (Runs inside sandbox, calls MCP server)     │          │
 │  │                                               │          │
 │  │  - Pattern Discovery Tools                   │          │
@@ -79,7 +79,7 @@ IRIS Prime now supports executing TypeScript code in isolated E2B sandboxes with
 
 ### POST /api/iris/execute
 
-Execute TypeScript code in an E2B sandbox with IRIS Prime access.
+Execute TypeScript code in an E2B sandbox with IRIS access.
 
 **Request:**
 
@@ -373,8 +373,8 @@ await evolvePrompts();
 ### Prerequisites
 
 1. **E2B API Key**: Get from https://e2b.dev
-2. **IRIS Prime API Key**: From project dashboard
-3. **Supabase Credentials**: Already configured in IRIS Prime
+2. **IRIS API Key**: From project dashboard
+3. **Supabase Credentials**: Already configured in IRIS
 
 ### Environment Variables
 
@@ -382,7 +382,7 @@ await evolvePrompts();
 # E2B Configuration
 E2B_API_KEY=your_e2b_api_key
 
-# IRIS Prime Configuration
+# IRIS Configuration
 SUPABASE_URL=your_supabase_url
 SUPABASE_SERVICE_KEY=your_service_key
 ```
@@ -559,4 +559,4 @@ Track execution metrics:
 
 **Version**: 1.0.0
 **Last Updated**: 2025-11-17
-**Maintainer**: IRIS Prime Team
+**Maintainer**: IRIS Team

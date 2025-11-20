@@ -75,7 +75,7 @@ async function processMessages(messages: any[]) {
 
     console.log('Processing WhatsApp message:', { from, type });
 
-    // Log event for IRIS Prime (using evaluateProject as proxy for now)
+    // Log event for IRIS (using evaluateProject as proxy for now)
     // You may want to add a proper logEvent method to irisPrime
     console.log('WhatsApp message event:', {
       from,
@@ -109,8 +109,8 @@ async function handleTextMessage(from: string, text: string) {
 
   // Example command handling
   if (command === 'status') {
-    // Send IRIS Prime status
-    await sendWhatsAppMessage(from, 'IRIS Prime is operational');
+    // Send IRIS status
+    await sendWhatsAppMessage(from, 'IRIS is operational');
   } else if (command.startsWith('evaluate')) {
     // Trigger evaluation
     await sendWhatsAppMessage(from, 'Starting evaluation...');

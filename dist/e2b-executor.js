@@ -1,12 +1,12 @@
 /**
- * E2B Code Executor for IRIS Prime
+ * E2B Code Executor for IRIS
  *
- * Executes TypeScript code in isolated E2B sandboxes with IRIS Prime MCP server access.
+ * Executes TypeScript code in isolated E2B sandboxes with IRIS MCP server access.
  * Follows Anthropic's pattern of sandbox execution with MCP integration.
  *
  * Architecture:
  * - Creates E2B sandbox with Node.js runtime
- * - Mounts IRIS Prime MCP server wrappers
+ * - Mounts IRIS MCP server wrappers
  * - Executes user code with access to IRIS tools
  * - Returns formatted results with telemetry
  */
@@ -26,7 +26,7 @@ export class IrisCodeExecutor {
         }
     }
     /**
-     * Execute TypeScript code in E2B sandbox with IRIS Prime access
+     * Execute TypeScript code in E2B sandbox with IRIS access
      */
     async executeCode(code, options = {}) {
         const startTime = Date.now();
@@ -42,7 +42,7 @@ export class IrisCodeExecutor {
                     this.activeSandboxes.set(options.sandboxId, sandbox);
                 }
             }
-            // Setup IRIS Prime environment
+            // Setup IRIS environment
             await this.setupIrisEnvironment(sandbox, options);
             // Execute the code
             const execution = await sandbox.runCode(code, {
@@ -111,7 +111,7 @@ export class IrisCodeExecutor {
         await sandbox.runCode(`
       const { execSync } = require('child_process');
 
-      // Install IRIS Prime MCP client and dependencies
+      // Install IRIS MCP client and dependencies
       execSync('npm install --no-save @modelcontextprotocol/sdk @foxruv/agent-learning-core', {
         stdio: 'inherit',
       });
@@ -119,20 +119,20 @@ export class IrisCodeExecutor {
         return sandbox;
     }
     /**
-     * Setup IRIS Prime environment in sandbox
+     * Setup IRIS environment in sandbox
      */
     async setupIrisEnvironment(sandbox, options) {
         // Create IRIS wrapper module that code can import
         const wrapperCode = `
-// IRIS Prime MCP Wrapper
-// This module provides access to IRIS Prime tools via MCP
+// IRIS MCP Wrapper
+// This module provides access to IRIS tools via MCP
 
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 
 let mcpClient = null;
 
-// Initialize MCP connection to IRIS Prime server
+// Initialize MCP connection to IRIS server
 async function initIris() {
   if (mcpClient) return mcpClient;
 
@@ -152,7 +152,7 @@ async function initIris() {
   return mcpClient;
 }
 
-// IRIS Prime tool wrappers
+// IRIS tool wrappers
 export const iris = {
   // Pattern Discovery
   async discoverPatterns(config) {

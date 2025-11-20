@@ -179,7 +179,7 @@ async function testApiEndpoint() {
 
 async function runAllTests() {
   console.log('╔════════════════════════════════════════════════════╗');
-  console.log('║   IRIS Prime E2B Integration Test Suite           ║');
+  console.log('║   IRIS E2B Integration Test Suite           ║');
   console.log('╚════════════════════════════════════════════════════╝');
 
   const tests = [

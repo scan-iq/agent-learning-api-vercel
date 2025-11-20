@@ -6,7 +6,7 @@ import { VercelRequest, VercelResponse } from '@vercel/node';
  * Simple public endpoint for IRIS telemetry collection
  * No authentication - trusts projectId in payload
  *
- * This is IRIS Prime's central collection point for ALL projects
+ * This is IRIS's central collection point for ALL projects
  */
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers

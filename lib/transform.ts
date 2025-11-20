@@ -42,7 +42,7 @@ export interface DashboardEvaluation {
 }
 
 /**
- * Transform IRIS Prime evaluation result to dashboard format
+ * Transform IRIS evaluation result to dashboard format
  */
 export function transformEvaluation(evaluation: any, projectId: string): DashboardEvaluation {
   const metrics = transformMetrics(evaluation.metrics || evaluation);
