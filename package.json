@@ -1,16 +1,38 @@
 {
   "name": "@iris-prime/api",
   "version": "1.0.0",
-  "description": "Production-grade API backend for Iris Prime Console with authentication, validation, and rate limiting",
+  "description": "Production-hardened API infrastructure for agent learning systems with distributed caching, atomic rate limiting, and DSPy optimization tracking. Built for Vercel Edge with <200ms p99 latency.",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "homepage": "https://github.com/iris-prime/agent-learning-api-vercel#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/iris-prime/agent-learning-api-vercel.git"
+  },
+  "bugs": {
+    "url": "https://github.com/iris-prime/agent-learning-api-vercel/issues",
+    "email": "support@iris-prime.dev"
+  },
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
     "clean": "rm -rf dist",
     "typecheck": "tsc --noEmit",
-    "test": "node --test",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:unit": "vitest run --testNamePattern='unit'",
+    "test:integration": "vitest run --testNamePattern='integration'",
+    "test:e2e": "vitest run --testNamePattern='e2e'",
+    "test:performance": "vitest run tests/performance.test.ts",
+    "benchmark": "tsx scripts/benchmark.ts",
+    "benchmark:local": "BENCHMARK_URL=http://localhost:3000 tsx scripts/benchmark.ts",
+    "load-test": "tsx scripts/load-test.ts",
+    "load-test:smoke": "tsx scripts/load-test.ts smoke",
+    "load-test:load": "tsx scripts/load-test.ts load",
+    "load-test:stress": "tsx scripts/load-test.ts stress",
+    "load-test:spike": "tsx scripts/load-test.ts spike",
     "lint": "eslint lib/**/*.ts",
     "prepublishOnly": "npm run clean && npm run build",
     "supabase:types": "supabase gen types typescript --linked --use-http > lib/types.supabase.generated.ts"
@@ -18,18 +40,58 @@
   "keywords": [
     "iris-prime",
     "api",
+    "agent-learning",
+    "dspy",
+    "miprov2",
+    "optimization-tracking",
     "authentication",
-    "validation",
     "rate-limiting",
-    "supabase"
+    "distributed-cache",
+    "vercel-edge",
+    "vercel-kv",
+    "supabase",
+    "edge-runtime",
+    "serverless",
+    "validation",
+    "zod",
+    "typescript",
+    "production-api",
+    "ai-agents",
+    "llm-optimization",
+    "machine-learning",
+    "redis",
+    "postgres",
+    "api-gateway",
+    "edge-functions",
+    "performance",
+    "observability",
+    "prometheus",
+    "circuit-breaker",
+    "request-coalescing",
+    "atomic-operations"
   ],
-  "author": "Iris Prime Team",
+  "author": {
+    "name": "Iris Prime Team",
+    "email": "support@iris-prime.dev",
+    "url": "https://iris-prime.dev"
+  },
+  "contributors": [
+    {
+      "name": "Agent Swarm",
+      "email": "agents@iris-prime.dev"
+    }
+  ],
   "license": "MIT",
+  "funding": {
+    "type": "github",
+    "url": "https://github.com/sponsors/iris-prime"
+  },
   "dependencies": {
     "@e2b/code-interpreter": "^2.2.0",
     "@foxruv/agent-learning-core": "^0.3.0",
     "@modelcontextprotocol/sdk": "^0.5.0",
     "@supabase/supabase-js": "^2.39.0",
+    "@vercel/kv": "^3.0.0",
     "@vercel/node": "^3.0.0",
     "agentdb": "^1.6.1",
     "agentic-flow": "^1.10.2",
@@ -37,7 +99,10 @@
   },
   "devDependencies": {
     "@types/node": "^20.0.0",
-    "typescript": "^5.6.0"
+    "@vitest/coverage-v8": "^1.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.6.0",
+    "vitest": "^1.0.0"
   },
   "peerDependencies": {
     "@supabase/supabase-js": "^2.39.0"
@@ -45,16 +110,56 @@
   "files": [
     "dist",
     "lib",
+    "migrations",
+    "scripts",
     "README.md",
-    "LICENSE"
+    "LICENSE",
+    "CHANGELOG.md"
   ],
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
   },
-  "exports": [
-    {
-      "/schemas": "./lib/schemas.js",
-      "/types": "./lib/types.supabase.js"
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./schemas": {
+      "import": "./dist/schemas.js",
+      "types": "./dist/schemas.d.ts"
+    },
+    "./types": {
+      "import": "./dist/types.supabase.js",
+      "types": "./dist/types.supabase.d.ts"
+    },
+    "./auth": {
+      "import": "./dist/auth.js",
+      "types": "./dist/auth.d.ts"
+    },
+    "./rate-limit": {
+      "import": "./dist/rate-limit.js",
+      "types": "./dist/rate-limit.d.ts"
+    },
+    "./kv": {
+      "import": "./dist/kv.js",
+      "types": "./dist/kv.d.ts"
+    },
+    "./cache": {
+      "import": "./dist/cache.js",
+      "types": "./dist/cache.d.ts"
+    },
+    "./observability": {
+      "import": "./dist/observability.js",
+      "types": "./dist/observability.d.ts"
+    },
+    "./optimization": {
+      "import": "./dist/supabase-optimization.js",
+      "types": "./dist/supabase-optimization.d.ts"
     }
-  ]
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  }
 }

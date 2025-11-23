@@ -5,7 +5,7 @@
  */
 export { extractApiKey, validateApiKey, requireAuth, getAuthContext, optionalAuth, clearAuthCache, getAuthCacheStats, withAuth, createApiKey, revokeApiKey, rotateApiKey, } from './auth';
 export { validateTelemetryEvent, validateSignatureEvent, validateReflexionEvent, validateConsensusEvent, parseJsonBody, validateQueryParams, } from './validation';
-export { checkRateLimit, rateLimit, getRateLimitStatus, rateLimitByIp, rateLimitByApiKey, rateLimitCombined, resetRateLimit, clearAllRateLimits, stopCleanupTimer, getRateLimitStoreSize, } from './rate-limit';
+export { checkRateLimit, rateLimit, getRateLimitStatus, rateLimitByIp, rateLimitByApiKey, rateLimitCombined, resetRateLimit, clearAllRateLimits, getRateLimitStoreSize, } from './rate-limit';
 export { ApiError, UnauthorizedError, ForbiddenError, NotFoundError, ValidationError, RateLimitError, InternalServerError, handleApiError, errorToResponse, logAuthFailure, logRateLimit, } from './errors';
 export type { TelemetryEvent, SignatureEvent, ReflexionEvent, ConsensusEvent, ProjectConfig, AuthContext, RateLimitConfig, RateLimitEntry, ErrorResponse, ExecutionResult, IrisCodeResult, SandboxConfig, CodeExecutionRequest, CodeExecutionResponse, PatternDiscoveryConfig, ReflexionEvaluation, ConsensusVote, TelemetryLog, PromptTemplate, LineageEntry, MetricRecord, } from './types';
 export { IrisCodeExecutor, getExecutor, resetExecutor, } from './e2b-executor';

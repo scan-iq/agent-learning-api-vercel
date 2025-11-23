@@ -39,7 +39,6 @@ export {
   rateLimitCombined,
   resetRateLimit,
   clearAllRateLimits,
-  stopCleanupTimer,
   getRateLimitStoreSize,
 } from './rate-limit';
 
