@@ -1,92 +1,62 @@
 /**
- * In-memory rate limiting for iris-prime-api
+ * Distributed rate limiting for iris-prime-api using Vercel KV
  *
- * Provides simple token bucket rate limiting
- * For production: Consider Redis or distributed solutions
+ * Provides distributed token bucket rate limiting with atomic operations
+ * Uses Vercel KV for persistence across Edge instances
  */
 
 import { RateLimitError, logRateLimit } from './errors';
-import type { RateLimitEntry } from './types';
+import { kvIncr, kvGet, kvTTL, kvDelete, KV_PREFIXES } from './kv.js';
 
 /**
- * In-memory store for rate limit tracking
- * Key format: "ip:{ip}" or "apikey:{projectId}" or "custom:{key}"
+ * Rate limit entry structure in KV
+ * Key format: "ratelimit:ip:{ip}" or "ratelimit:apikey:{projectId}" or "ratelimit:custom:{key}"
  */
-const rateLimitStore = new Map<string, RateLimitEntry>();
 
 /**
- * Clean up expired entries every 60 seconds
- */
-const CLEANUP_INTERVAL = 60_000;
-let cleanupTimer: NodeJS.Timeout | null = null;
-
-function startCleanupTimer(): void {
-  if (cleanupTimer) return;
-
-  cleanupTimer = setInterval(() => {
-    const now = Date.now();
-    for (const [key, entry] of rateLimitStore.entries()) {
-      if (entry.resetAt <= now) {
-        rateLimitStore.delete(key);
-      }
-    }
-  }, CLEANUP_INTERVAL);
-
-  // Allow Node.js to exit even if timer is active
-  if (cleanupTimer.unref) {
-    cleanupTimer.unref();
-  }
-}
-
-/**
- * Check if a rate limit key is within limits
+ * Check if a rate limit key is within limits using atomic KV operations
  *
  * @param key - Unique identifier for rate limiting (IP, API key, etc.)
  * @param maxRequests - Maximum requests allowed in window
  * @param windowMs - Time window in milliseconds
  * @returns true if request is allowed, false if rate limited
  */
-export function checkRateLimit(
+export async function checkRateLimit(
   key: string,
   maxRequests: number = 100,
   windowMs: number = 60_000
-): boolean {
-  startCleanupTimer();
+): Promise<boolean> {
+  const windowSeconds = Math.ceil(windowMs / 1000);
 
-  const now = Date.now();
-  const entry = rateLimitStore.get(key);
+  try {
+    // Use atomic increment with TTL
+    const count = await kvIncr(key, windowSeconds);
 
-  // No entry exists - create new one
-  if (!entry) {
-    rateLimitStore.set(key, {
-      count: 1,
-      resetAt: now + windowMs,
-    });
+    // If circuit is open (count is null), allow request with logging
+    if (count === null) {
+      console.warn(`[Rate Limit] KV unavailable for key ${key}, allowing request`);
+      return true;
+    }
+
+    // Check if over limit
+    if (count > maxRequests) {
+      const ttl = await kvTTL(key, KV_PREFIXES.RATELIMIT);
+      const resetAt = ttl && ttl > 0 ? Date.now() + (ttl * 1000) : Date.now() + windowMs;
+
+      logRateLimit(key, {
+        count,
+        maxRequests,
+        resetAt: new Date(resetAt).toISOString(),
+      });
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error(`[Rate Limit] Error checking rate limit for key ${key}:`, error);
+    // Fail open - allow request if KV is down
     return true;
   }
-
-  // Entry expired - reset
-  if (entry.resetAt <= now) {
-    rateLimitStore.set(key, {
-      count: 1,
-      resetAt: now + windowMs,
-    });
-    return true;
-  }
-
-  // Entry exists and valid - check count
-  if (entry.count >= maxRequests) {
-    logRateLimit(key, {
-      count: entry.count,
-      maxRequests,
-      resetAt: new Date(entry.resetAt).toISOString(),
-    });
-    return false;
-  }
-
-  // Increment count
-  entry.count++;
-  return true;
 }
 
 /**
@@ -97,23 +67,24 @@ export function checkRateLimit(
  * @param maxRequests - Maximum requests allowed in window
  * @param windowMs - Time window in milliseconds
  */
-export function rateLimit(
+export async function rateLimit(
   key: string,
   maxRequests: number = 100,
   windowMs: number = 60_000
-): void {
-  const allowed = checkRateLimit(key, maxRequests, windowMs);
+): Promise<void> {
+  const allowed = await checkRateLimit(key, maxRequests, windowMs);
 
   if (!allowed) {
-    const entry = rateLimitStore.get(key);
-    const resetAt = entry ? new Date(entry.resetAt).toISOString() : undefined;
+    const ttl = await kvTTL(key, KV_PREFIXES.RATELIMIT);
+    const resetAt = ttl && ttl > 0 ? new Date(Date.now() + (ttl * 1000)).toISOString() : undefined;
+    const retryAfter = ttl && ttl > 0 ? ttl : Math.ceil(windowMs / 1000);
 
     throw new RateLimitError('Rate limit exceeded', {
       key,
       maxRequests,
       windowMs,
       resetAt,
-      retryAfter: entry ? Math.ceil((entry.resetAt - Date.now()) / 1000) : undefined,
+      retryAfter,
     });
   }
 }
@@ -122,95 +93,101 @@ export function rateLimit(
  * Get rate limit status for a key
  * Useful for adding X-RateLimit headers
  */
-export function getRateLimitStatus(key: string, maxRequests: number = 100): {
+export async function getRateLimitStatus(key: string, maxRequests: number = 100): Promise<{
   limit: number;
   remaining: number;
   reset?: string;
-} {
-  const entry = rateLimitStore.get(key);
+}> {
+  try {
+    // Get current count from KV
+    const count = await kvGet<number>(key, KV_PREFIXES.RATELIMIT);
 
-  if (!entry || entry.resetAt <= Date.now()) {
+    if (count === null || count === undefined) {
+      return {
+        limit: maxRequests,
+        remaining: maxRequests,
+      };
+    }
+
+    // Get TTL to calculate reset time
+    const ttl = await kvTTL(key, KV_PREFIXES.RATELIMIT);
+    const resetAt = ttl && ttl > 0 ? new Date(Date.now() + (ttl * 1000)).toISOString() : undefined;
+
+    return {
+      limit: maxRequests,
+      remaining: Math.max(0, maxRequests - count),
+      reset: resetAt,
+    };
+  } catch (error) {
+    console.error(`[Rate Limit] Error getting status for key ${key}:`, error);
+    // Return default values if KV is down
     return {
       limit: maxRequests,
       remaining: maxRequests,
     };
   }
-
-  return {
-    limit: maxRequests,
-    remaining: Math.max(0, maxRequests - entry.count),
-    reset: new Date(entry.resetAt).toISOString(),
-  };
 }
 
 /**
  * Rate limit by IP address
  */
-export function rateLimitByIp(
+export async function rateLimitByIp(
   ip: string,
   maxRequests: number = 100,
   windowMs: number = 60_000
-): void {
-  rateLimit(`ip:${ip}`, maxRequests, windowMs);
+): Promise<void> {
+  await rateLimit(`ip:${ip}`, maxRequests, windowMs);
 }
 
 /**
  * Rate limit by API key / project ID
  */
-export function rateLimitByApiKey(
+export async function rateLimitByApiKey(
   projectId: string,
   maxRequests: number = 1000,
   windowMs: number = 60_000
-): void {
-  rateLimit(`apikey:${projectId}`, maxRequests, windowMs);
+): Promise<void> {
+  await rateLimit(`apikey:${projectId}`, maxRequests, windowMs);
 }
 
 /**
  * Combined rate limiting - checks both IP and API key
  */
-export function rateLimitCombined(
+export async function rateLimitCombined(
   ip: string,
   projectId: string,
   ipLimits: { maxRequests: number; windowMs: number } = { maxRequests: 100, windowMs: 60_000 },
   apiKeyLimits: { maxRequests: number; windowMs: number } = { maxRequests: 1000, windowMs: 60_000 }
-): void {
+): Promise<void> {
   // Check IP limit first (stricter)
-  rateLimitByIp(ip, ipLimits.maxRequests, ipLimits.windowMs);
+  await rateLimitByIp(ip, ipLimits.maxRequests, ipLimits.windowMs);
 
   // Then check API key limit
-  rateLimitByApiKey(projectId, apiKeyLimits.maxRequests, apiKeyLimits.windowMs);
+  await rateLimitByApiKey(projectId, apiKeyLimits.maxRequests, apiKeyLimits.windowMs);
 }
 
 /**
  * Reset rate limit for a specific key
  * Useful for testing or admin overrides
  */
-export function resetRateLimit(key: string): void {
-  rateLimitStore.delete(key);
+export async function resetRateLimit(key: string): Promise<void> {
+  await kvDelete(key, KV_PREFIXES.RATELIMIT);
 }
 
 /**
  * Clear all rate limit data
- * Useful for testing
+ * Note: KV doesn't support clearing all keys easily
+ * This is a no-op for KV-based implementation
  */
 export function clearAllRateLimits(): void {
-  rateLimitStore.clear();
-}
-
-/**
- * Stop cleanup timer
- * Useful for graceful shutdown
- */
-export function stopCleanupTimer(): void {
-  if (cleanupTimer) {
-    clearInterval(cleanupTimer);
-    cleanupTimer = null;
-  }
+  console.warn('[Rate Limit] clearAllRateLimits is not supported with KV. Use resetRateLimit for individual keys.');
 }
 
 /**
  * Get current store size (for monitoring)
+ * Note: KV doesn't support getting store size
+ * Returns a message instead
  */
-export function getRateLimitStoreSize(): number {
-  return rateLimitStore.size;
+export function getRateLimitStoreSize(): string {
+  return 'Rate limiting is now using Vercel KV - store size not available';
 }

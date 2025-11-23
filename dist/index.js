@@ -8,7 +8,7 @@ export { extractApiKey, validateApiKey, requireAuth, getAuthContext, optionalAut
 // Re-export all validation utilities
 export { validateTelemetryEvent, validateSignatureEvent, validateReflexionEvent, validateConsensusEvent, parseJsonBody, validateQueryParams, } from './validation';
 // Re-export all rate limiting utilities
-export { checkRateLimit, rateLimit, getRateLimitStatus, rateLimitByIp, rateLimitByApiKey, rateLimitCombined, resetRateLimit, clearAllRateLimits, stopCleanupTimer, getRateLimitStoreSize, } from './rate-limit';
+export { checkRateLimit, rateLimit, getRateLimitStatus, rateLimitByIp, rateLimitByApiKey, rateLimitCombined, resetRateLimit, clearAllRateLimits, getRateLimitStoreSize, } from './rate-limit';
 // Re-export all error classes and handlers
 export { ApiError, UnauthorizedError, ForbiddenError, NotFoundError, ValidationError, RateLimitError, InternalServerError, handleApiError, errorToResponse, logAuthFailure, logRateLimit, } from './errors';
 // Re-export E2B executor utilities

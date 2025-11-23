@@ -41,19 +41,19 @@ export declare function getAuthContext(request: Request): Promise<AuthContext>;
  */
 export declare function optionalAuth(request: Request): Promise<string | null>;
 /**
- * Clear API key cache
+ * Clear API key from cache
  * Useful for testing or when project configs change
+ *
+ * @param apiKey - API key to clear from cache
  */
-export declare function clearAuthCache(): void;
+export declare function clearAuthCache(apiKey?: string): Promise<void>;
 /**
  * Get cache statistics (for monitoring)
+ * Note: Limited functionality with KV - cannot easily enumerate all keys
  */
 export declare function getAuthCacheStats(): {
-    size: number;
-    entries: Array<{
-        projectId: string;
-        expiresAt: string;
-    }>;
+    message: string;
+    note: string;
 };
 /**
  * Middleware helper for API routes

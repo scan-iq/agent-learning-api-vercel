@@ -9,6 +9,7 @@ import { createClient, SupabaseClient } from '@supabase/supabase-js';
 import { UnauthorizedError, logAuthFailure } from './errors.js';
 import type { AuthContext, ProjectConfig } from './types.js';
 import { findProjectByApiKey, touchApiKeyUsage, isValidApiKeyFormat } from "./apiKeys.js";
+import { kvGet, kvSet, kvDelete, KV_PREFIXES } from './kv.js';
 
 /**
  * Supabase client singleton
@@ -41,11 +42,18 @@ function getSupabaseClient(): SupabaseClient {
 }
 
 /**
- * In-memory cache for API key lookups (5 minute TTL)
- * Format: Map<apiKey, { projectConfig, expiresAt }>
+ * Vercel KV cache for API key lookups (5 minute TTL)
+ * Uses distributed cache with auth: prefix
  */
-const apiKeyCache = new Map<string, { config: ProjectConfig; expiresAt: number }>();
-const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+const CACHE_TTL_SECONDS = 5 * 60; // 5 minutes in seconds
+
+/**
+ * Cache entry structure for API keys
+ */
+interface ApiKeyCacheEntry {
+  config: ProjectConfig;
+  expiresAt: number;
+}
 
 /**
  * Extract API key from Authorization header
@@ -84,8 +92,8 @@ export async function validateApiKey(apiKey: string): Promise<ProjectConfig> {
     throw new UnauthorizedError('API key is required');
   }
 
-  // Check cache first
-  const cached = apiKeyCache.get(apiKey);
+  // Check KV cache first
+  const cached = await kvGet<ApiKeyCacheEntry>(apiKey, KV_PREFIXES.AUTH);
   if (cached && cached.expiresAt > Date.now()) {
     return cached.config;
   }
@@ -117,11 +125,12 @@ export async function validateApiKey(apiKey: string): Promise<ProjectConfig> {
       updatedAt: data.updated_at,
     };
 
-    // Cache the result
-    apiKeyCache.set(apiKey, {
+    // Cache the result in KV
+    const cacheEntry: ApiKeyCacheEntry = {
       config: projectConfig,
-      expiresAt: Date.now() + CACHE_TTL,
-    });
+      expiresAt: Date.now() + (CACHE_TTL_SECONDS * 1000),
+    };
+    await kvSet(apiKey, cacheEntry, CACHE_TTL_SECONDS, KV_PREFIXES.AUTH);
 
     return projectConfig;
   } catch (error) {
@@ -199,32 +208,30 @@ export async function optionalAuth(request: Request): Promise<string | null> {
 }
 
 /**
- * Clear API key cache
+ * Clear API key from cache
  * Useful for testing or when project configs change
+ *
+ * @param apiKey - API key to clear from cache
  */
-export function clearAuthCache(): void {
-  apiKeyCache.clear();
+export async function clearAuthCache(apiKey?: string): Promise<void> {
+  if (apiKey) {
+    await kvDelete(apiKey, KV_PREFIXES.AUTH);
+  }
+  // Note: KV doesn't support clearing all keys easily
+  // Individual keys must be deleted explicitly
 }
 
 /**
  * Get cache statistics (for monitoring)
+ * Note: Limited functionality with KV - cannot easily enumerate all keys
  */
 export function getAuthCacheStats(): {
-  size: number;
-  entries: Array<{ projectId: string; expiresAt: string }>;
+  message: string;
+  note: string;
 } {
-  const entries: Array<{ projectId: string; expiresAt: string }> = [];
-
-  for (const [_, value] of apiKeyCache.entries()) {
-    entries.push({
-      projectId: value.config.id,
-      expiresAt: new Date(value.expiresAt).toISOString(),
-    });
-  }
-
   return {
-    size: apiKeyCache.size,
-    entries,
+    message: 'Auth cache is now using Vercel KV',
+    note: 'KV does not support enumerating all keys. Use individual key operations instead.',
   };
 }
 
@@ -303,8 +310,8 @@ export async function revokeApiKey(apiKey: string): Promise<void> {
     throw new Error(`Failed to revoke API key: ${error.message}`);
   }
 
-  // Remove from cache
-  apiKeyCache.delete(apiKey);
+  // Remove from KV cache
+  await kvDelete(apiKey, KV_PREFIXES.AUTH);
 }
 
 /**
@@ -338,8 +345,8 @@ export async function rotateApiKey(projectId: string): Promise<string> {
     throw new Error(`Failed to rotate API key: ${updateError.message}`);
   }
 
-  // Clear old key from cache
-  apiKeyCache.delete(project.api_key);
+  // Clear old key from KV cache
+  await kvDelete(project.api_key, KV_PREFIXES.AUTH);
 
   return newApiKey;
 }
