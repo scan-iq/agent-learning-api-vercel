@@ -10,11 +10,22 @@ export function getSupabaseClient(): SupabaseClient {
     return supabaseClient;
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL?.trim();
-  const supabaseKey = (process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_ANON_KEY)?.trim();
+  // Support both standard and FOXRUV-prefixed env vars
+  const supabaseUrl =
+    process.env.SUPABASE_URL?.trim() ||
+    process.env.FOXRUV_SUPABASE_URL?.trim();
+
+  const supabaseKey =
+    (process.env.SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.SUPABASE_SERVICE_KEY ||
+      process.env.SUPABASE_ANON_KEY ||
+      process.env.FOXRUV_SUPABASE_SERVICE_ROLE_KEY ||
+      process.env.FOXRUV_SUPABASE_ANON_KEY)?.trim();
 
   if (!supabaseUrl || !supabaseKey) {
-    throw new Error('Missing Supabase environment variables: SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY required');
+    throw new Error(
+      'Missing Supabase environment variables: set SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY (or FOXRUV_* equivalents)'
+    );
   }
 
   supabaseClient = createClient(supabaseUrl, supabaseKey, {
